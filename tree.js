@@ -1,5 +1,5 @@
 var tree = angular.module('tree', []);
-tree.directive('jqtree', function(){
+tree.directive('jqtree', function($parse){
   return {
     restrict : 'A',
     replace : true,
@@ -8,12 +8,10 @@ tree.directive('jqtree', function(){
       jqtreeSelectedNodes : '=', // it can be [node] if single or [node1, node2, ...] if multiple
       jqtreeModel : '=',
       jqtreeSelectNode : '&',
-      jqtreeMultiple : '@',
+      jqtreeMultiple : '=',
       jqtreeHandle : '='
     },
     link : function($scope, $element, $attrs){
-
-      // shorthands
 
       // helper on safeApply
       $scope.safeApply = function(fn) {
@@ -38,18 +36,19 @@ tree.directive('jqtree', function(){
           }
           $scope.handle.tree('loadData', newValue);
         });
-
-        $scope.$watch('jqtreeSelectedNodes', function (newValue, oldValue) {
-
-        }, true);
-
       });
 
       // events
       $scope.bindEvents = function(){
 
         $scope.handle.bind('tree.select', function(event){
-          console.log('select');
+          $scope.fromEvent = true;
+
+          if (event.node) {
+            $scope.select(event.node);
+          } else {
+            $scope.deselect(event.previous_node);
+          }
         });
 
         $scope.handle.bind('tree.contextmenu', function(event){
@@ -58,22 +57,71 @@ tree.directive('jqtree', function(){
 
         // decorate with some helpers
         $scope.handle.appendNode = function(data){
-          $scope.jqtreeSelectedNodes.push({});
+          $scope.jqtreeSelectedNodes = $scope.jqtreeSelectedNodes || [];
+          if ($scope.jqtreeSelectedNodes.length != 1) return;
+
+          // get the current node as parent
+          var parent = $scope.jqtreeSelectedNodes[0];
+          var node = $scope.jqtreeHandle.tree('appendNode', data, parent);
+
+          // select the newly created node
+          $scope.select(node);
         }
 
         $scope.handle.removeNode = function(){
+          $scope.jqtreeSelectedNodes = $scope.jqtreeSelectedNodes || [];
+
+          if ($scope.jqtreeSelectedNodes.length != 1) return;
+          var node = $scope.jqtreeSelectedNodes[0];
+          $scope.jqtreeHandle.tree('removeNode', node);
+
+          $scope.safeApply(function(){
+            $scope.jqtreeSelectedNodes = [];
+          });
+          // todo: select its parent
         }
+      }
+
+      $scope.addToSelection = function (node){
+        if (!jqtreeMultiple) return;
+        $scope.handle.tree('addToSelection', node);
+      }
+
+      $scope.removeFromSelection = function (node){
+        if (!jqtreeMultiple) return;
+        var node = $scope.handle.tree('getNodeById', node.id);
+        $scope.handle.tree('removeFromSelection', node);
       }
 
       // to model
       $scope.select = function(node){
+        $scope.safeApply(function(){
+          if ($scope.jqtreeMultiple) {
+            $scope.jqtreeSelectedNodes = $scope.jqtreeSelectedNodes || [];
+          } else {
+            $scope.jqtreeSelectedNodes = [];
+          }
+          $scope.jqtreeSelectedNodes.push(node);
+          $scope.selectNode(node);
+        });
       }
 
       $scope.deselect = function(node){
+        $scope.safeApply(function(){
+          if ($scope.jqtreeMultiple) {
+            $scope.jqtreeSelectedNodes = $scope.jqtreeSelectedNodes || [];
+          } else {
+            $scope.jqtreeSelectedNodes = [];
+          }
+          $scope.jqtreeSelectedNodes.splice(1, node);
+        });
       }
 
       // to visual element
       $scope.selectNode = function(node){
+        $scope.safeApply(function(){
+          $scope.handle.tree('selectNode', node);
+        });
       }
     }
   }

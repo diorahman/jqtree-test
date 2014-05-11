@@ -36,6 +36,10 @@ app.controller("TreeCtrl", function($scope, $timeout){
     });
   }
 
+  $scope.remove = function(){
+    $scope.handle.removeNode();
+  }
+
   $scope.$watch('keyword', function(newVal){
     var nodes = _.filter(data, function(node){ return node.name.indexOf(newVal) >= 0});
     // todo get all parents
@@ -44,6 +48,8 @@ app.controller("TreeCtrl", function($scope, $timeout){
 
   $timeout(function(){
     $scope.data = treeify(data)
+    $scope.selectedNodes = [];
+    $scope.multiple = false;
   });
 
 });
