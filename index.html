@@ -1,0 +1,33 @@
+<!doctype html>
+<html ng-app="testApp">
+  <head>
+    <link rel="stylesheet" href="vendor/jqtree.css">
+  </head>
+  <body>
+    <div ng-controller="TreeCtrl">
+      <input type="text" placeholder="search" ng-model="keyword"/>
+      <div>
+        <button ng-click="add()">Add</button>
+        <button ng-click="remove()">Remove</button>
+      </div>
+      <div jqtree
+        jqtree-model="data"
+        jqtree-select-node="select(node)"
+        jqtree-multiple="false"
+        jqtree-handle="handle"
+        jqtree-selected-nodes="selectedNodes" >
+      </div>
+      <ul>
+        <li ng-repeat="selectedNode in selectedNodes track by $index">
+            {{ selectedNode.id }}
+        </li>
+      </ul>
+    </div>
+    <script src="vendor/jquery.js"></script>
+    <script src="vendor/tree.jquery.js"></script>
+    <script src="vendor/lodash.js"></script>
+    <script src="vendor/angular.js"></script>
+    <script src="tree.js"></script>
+    <script src="test.js"></script>
+  </body>
+</html>
