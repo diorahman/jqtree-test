@@ -41,9 +41,39 @@ app.controller("TreeCtrl", function($scope, $timeout){
   }
 
   $scope.$watch('keyword', function(newVal){
+    var getParents = function(list, node) {
+      if (node) {
+        if (node.parentId != 0) {
+          var parent = _.filter(data, function(n) { 
+            return n.id == node.parentId;
+          });
+          if (parent && parent[0]) {
+            if (!list.hash[parent[0].id]) {
+              list.hash[parent[0].id] = 1;
+              list.list.push(parent[0]);
+            }
+            getParents(list, parent[0]);
+          }
+        }
+      }
+    }
+
     var nodes = _.filter(data, function(node){ return node.name.indexOf(newVal) >= 0});
+    var list = {
+      hash: {},
+      list: []
+    };
+    _.each(nodes, function(node) {
+      // For each node, append itself to the list...
+      if (!list.hash[node.id]) {
+        list.hash[node.id] = 1; // (add to the list if it's not yet on the list)
+        list.list.push(node);
+      }
+      // ... and get it's parents
+      getParents(list, node);
+    });
     // todo get all parents
-    $scope.data = treeify(nodes)
+    $scope.data = treeify(list.list)
   });
 
   $timeout(function(){
